@@ -45,6 +45,7 @@
     let result = await nftItem.getMyNFTs()
     console.log(result)
     ownNFTs.items = []
+    signStrs.sellSign = ''
     result.forEach(async function (item){
       let data = await fetchTokenURI(item['tokenURI'])
       ownNFTs.items.push({
@@ -83,6 +84,7 @@
     let result = await nftItem.getSellNFTs()
     console.log(result)
     sellingNFTs.items = []
+    signStrs.buySign = ''
     result.forEach(async function(item){
       let data = await nftItem.tokenURI(item.tokenId)
       console.log(data)

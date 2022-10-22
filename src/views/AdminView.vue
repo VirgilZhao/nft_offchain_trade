@@ -90,7 +90,7 @@
       <button @click="mint" class="px-2 py-2 mt-2 text-white rounded bg-sky-500">Mint</button>
     </div>
     <div class="p-2 m-4 border border-emerald-400">
-      <p>Online Sell NFT</p>
+      <p>Onchain Sell NFT</p>
       <label class="block mt-2">
         <span>Seller</span>
         <input type="text" v-model="sellInfo.address" class="block w-full mt-2 bg-white border "/>
@@ -110,7 +110,7 @@
       <button @click="onlineSelling" class="px-2 py-2 mt-2 text-white rounded bg-sky-500">Online</button>
     </div>
     <div class="p-2 m-4 border border-emerald-400">
-      <p>Online Buy NFT</p>
+      <p>Onchain Buy NFT</p>
       <label class="block mt-2">
         <span>Seller</span>
         <input type="text" v-model="buyerInfo.seller" class="block w-full mt-2 bg-white border "/>

@@ -3,9 +3,10 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "./RoleControl.sol";
 
-contract NFTItem is ERC721URIStorage, Ownable  {
+contract NFTItem is ERC721URIStorage, RoleControl  {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
     Counters.Counter private _listSells;
@@ -22,12 +23,15 @@ contract NFTItem is ERC721URIStorage, Ownable  {
         uint256 price;
     }
 
-    constructor() ERC721("NFTItem", "MNFT") {
-        
+    constructor() ERC721("NFTItem", "MNFT") RoleControl(msg.sender) {
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, AccessControl) returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 
     function awardItem(address buyer, string memory tokenURI)
-        onlyOwner
+        onlyFeePayer
         public
         returns (uint256)
     {
@@ -40,7 +44,7 @@ contract NFTItem is ERC721URIStorage, Ownable  {
     }
 
     function sellItem(address seller, uint256 tokenId, uint256 price, bytes memory signature) 
-        onlyOwner
+        onlyFeePayer
         public 
     {
         require(verifySign(seller, tokenId, price, signature), "signature is not matched");
@@ -54,7 +58,7 @@ contract NFTItem is ERC721URIStorage, Ownable  {
     }
 
     function buyItem(address seller, address buyer, uint256 tokenId, uint256 price, bytes memory signature) 
-        onlyOwner
+        onlyFeePayer
         public 
     {
         require(verifySign(buyer, tokenId, price, signature), "signature is not matched");

@@ -5,10 +5,12 @@
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
 const hre = require("hardhat");
-const fs = require("fs")
+const fs = require("fs");
+const { ethers } = require("hardhat");
 
 async function main() {
   const NFTItem = await hre.ethers.getContractFactory("NFTItem")
+  let [admin] = await ethers.getSigners()
   const nftInstance = await NFTItem.deploy()
   await nftInstance.deployed()
   console.log("NFTItem deployed to:", nftInstance.address)
