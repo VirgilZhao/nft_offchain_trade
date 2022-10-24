@@ -5,7 +5,7 @@ describe('NFTItem', function(){
     it('awardItem', async () => {
         const NFTItemContract = await hre.ethers.getContractFactory("NFTItem")
         const nftInstance = await NFTItemContract.deploy() 
-        //console.log(nftInstance)
+        console.log(nftInstance)
 
         const [account1, account2] = await hre.ethers.getSigners()
         console.log(account1, account2)
