@@ -1,7 +1,7 @@
 const {expect} = require('chai')
 const hre = require('hardhat')
 
-describe('NFTItem', function(){
+/*describe('NFTItem', function(){
     it('awardItem', async () => {
         const NFTItemContract = await hre.ethers.getContractFactory("NFTItem")
         const nftInstance = await NFTItemContract.deploy() 
@@ -13,4 +13,4 @@ describe('NFTItem', function(){
         const tx = await nftInstance.connect(account1).awardItem(account2.getAddress(), tokenURI)
         console.log(tx)
     })
-})
+})*/

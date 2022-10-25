@@ -13,10 +13,15 @@ async function main() {
   let [admin] = await ethers.getSigners()
   const nftInstance = await NFTItem.deploy()
   await nftInstance.deployed()
+  const RecNFTMarketplace = await hre.ethers.getContractFactory("RecNFTMarketplace")
   console.log("NFTItem deployed to:", nftInstance.address)
+  const recInstance = await RecNFTMarketplace.deploy()
+  await recInstance.deployed()
+  console.log('RRE deployed to:', recInstance.address)
 
   fs.writeFileSync('./config.js', `
     export const nftItemAddress = "${nftInstance.address}"
+    export const recNFTMarketplaceAddress = "${recInstance.address}"
   `)
 }
 

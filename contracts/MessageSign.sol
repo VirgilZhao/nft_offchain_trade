@@ -2,8 +2,8 @@
 pragma solidity ^0.8.9;
 
 abstract contract MessageSign {
-    function getMessageHash(address addr, uint256 orderId, uint256 tokenId, uint256 amount, uint256 price) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(addr, orderId, tokenId, amount, price));
+    function getMessageHash(uint256 tradeId, uint256 tokenId, uint256 amount, uint256 price, string memory nonce) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(tradeId, tokenId, amount, price, nonce));
     }
 
     function getEthSignedMessageHash(bytes32 _messageHash)
@@ -21,10 +21,10 @@ abstract contract MessageSign {
             );
     }
 
-    function verifySign(address seller, uint256 orderId, uint256 tokenId, uint256 amount, uint256 price, bytes memory signature) public pure returns (bool) {
-        bytes32 msssageHash = getMessageHash(seller, orderId, tokenId, amount, price);
+    function verifySign(address signerAddress, uint256 tradeId, uint256 tokenId, uint256 amount, uint256 price, string memory nonce, bytes memory signature) public pure returns (bool) {
+        bytes32 msssageHash = getMessageHash(tradeId, tokenId, amount, price, nonce);
         bytes32 ethSignedMessageHash = getEthSignedMessageHash(msssageHash);
-        return recoverSigner(ethSignedMessageHash, signature) == seller;
+        return recoverSigner(ethSignedMessageHash, signature) == signerAddress;
     }
 
     function recoverSigner(bytes32 _ethSignedMessageHash, bytes memory _signature)

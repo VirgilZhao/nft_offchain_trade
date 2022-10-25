@@ -10,21 +10,12 @@ contract RecNFTMarketplace is ERC1155URIStorage, RoleControl, MessageSign  {
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIds;
     mapping (uint256 => OrderItem) private _idToOrderItemMap;
-    mapping (uint256 => OfferItem) private _offerItemMap;
     event AwardItem(address holder, uint256 tokenId, uint256 amount, string tokenURI);
     event SellItem(address seller, uint256 orderId, uint256 tokenId, uint256 amount, uint256 price);
     event BuyItem(address buyer, uint256 orderId, uint256 tokenId, uint256 amount, uint256 price);
+    event ConfirmOffer(address seller, address buyer, uint256 orderId, uint256 tokenId, uint256 amount, uint256 price);
 
     struct OrderItem {
-        uint256 orderId;
-        uint256 tokenId;
-        address payable seller;
-        uint256 price;
-        uint256 amount;
-    }
-
-    struct OfferItem{
-        uint256 offerId;
         uint256 orderId;
         uint256 tokenId;
         address payable seller;
@@ -58,11 +49,11 @@ contract RecNFTMarketplace is ERC1155URIStorage, RoleControl, MessageSign  {
         return newItemId;
     }
 
-    function sellItem(address seller, uint256 orderId, uint256 tokenId, uint256 amount, uint256 price, bytes memory signature)
+    function sellItem(address seller, uint256 orderId, uint256 tokenId, uint256 amount, uint256 price, string memory nonce, bytes memory signature)
         onlyFeePayer
         external
     {
-        require(verifySign(seller, orderId, tokenId, amount, price, signature), "signature is not matched");
+        require(verifySign(seller, orderId, tokenId, amount, price, nonce, signature), "signature is not matched");
         require(balanceOf(seller, tokenId) >= amount, "seller has not enough amount to sell");
         require(price > 0, "price must bigger than 0");
         require(amount > 0, "amount must bigger than 0");
@@ -75,21 +66,21 @@ contract RecNFTMarketplace is ERC1155URIStorage, RoleControl, MessageSign  {
         emit SellItem(seller, orderId, tokenId, amount, price);
     }
 
-    function buyItem(address buyer, uint256 orderId, uint256 tokenId, uint256 amount, uint256 price, bytes memory signature)
+    function buyItem(address buyer, uint256 orderId, uint256 tokenId, uint256 amount, uint256 price, string memory nonce, bytes memory signature)
         onlyFeePayer
         external
     {
-        require(verifySign(buyer, orderId, tokenId, amount, price, signature), "signature is not matched");
+        require(verifySign(buyer, orderId, tokenId, amount, price, nonce, signature), "signature is not matched");
         require(_idToOrderItemMap[orderId].price > 0, "order item is not on sale");
         require(_idToOrderItemMap[orderId].amount >= amount, "order has not enough amount to sell");
         address seller = _idToOrderItemMap[orderId].seller;
-        require(balanceOf(seller, tokenId) >= amount, "seller has not enough amount to sell");
+        require(balanceOf(seller, tokenId) >= amount, "seller has not enough total amount to sell");
         require(price > 0, "price must bigger than 0");
         require(amount > 0, "amount must bigger than 0");
         require(orderId > 0, "order id is required");
         _safeTransferFrom(seller, buyer, tokenId, amount, "");
         uint256 orderItemAmount = _idToOrderItemMap[orderId].amount;
-        if(orderItemAmount == amount){
+        if(orderItemAmount <= amount){
             delete _idToOrderItemMap[orderId];
         } else {
             _idToOrderItemMap[orderId].amount = orderItemAmount - amount;
@@ -97,21 +88,25 @@ contract RecNFTMarketplace is ERC1155URIStorage, RoleControl, MessageSign  {
         emit BuyItem(buyer, orderId, tokenId, amount, price);
     }
 
-    function makeOffer(address buyer, uint256 offerId, uint256 orderId, uint256 tokenId, uint256 amount, uint256 price, bytes memory signature)
+    function confirmOffer(address seller, address buyer, uint256 offerId, uint256 orderId, uint256 tokenId, uint256 amount, uint256 price, string memory sellerNonce, bytes memory sellerSignature, string memory buyerNonce, bytes memory buyerSignature)
         onlyFeePayer
         external
     {
-        require(verifySign(buyer, orderId, tokenId, amount, price, signature), "signature is not matched");
-        require(_idToOrderItemMap[orderId].price > 0, "order item is not on sale");
+        require(verifySign(seller, offerId, tokenId, amount, price, sellerNonce, sellerSignature), "seller signature is not matched");
+        require(verifySign(buyer, orderId, tokenId, amount, price, buyerNonce, buyerSignature), "buyer signaure is not matched");
         require(_idToOrderItemMap[orderId].amount >= amount, "order has not enough amount to sell");
-        address seller = _idToOrderItemMap[orderId].seller;
-        require(balanceOf(seller, tokenId) >= amount, "seller has not enough amount to sell");
+        require(balanceOf(seller, tokenId) >= amount, "seller doesn't have enough total amount to sell");
         require(price > 0, "price must bigger than 0");
         require(amount > 0, "amount must bigger than 0");
         require(orderId > 0, "order id is required");
         require(offerId > 0, "offer id is required");
-        _offerItemMap[offerId] = OfferItem(offerId, orderId, tokenId, payable(seller), price, amount);
+        _safeTransferFrom(seller, buyer, tokenId, amount, "");
+        uint256 orderItemAmount = _idToOrderItemMap[orderId].amount;
+        if(orderItemAmount <= amount) {
+            delete _idToOrderItemMap[orderId];
+        } else {
+            _idToOrderItemMap[orderId].amount = orderItemAmount - amount;
+        }
+        emit ConfirmOffer(seller, buyer, orderId, tokenId, amount, price);
     }
-
-    function cancelOffer()
 }
